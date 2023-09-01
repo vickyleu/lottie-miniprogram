@@ -3,7 +3,8 @@ module.exports = {
   parser: "babel-eslint",
   parserOptions: {
     ecmaVersion: 2018,
-    sourceType: 'module'
+    sourceType: 'module',
+    parser: "@typescript-eslint/parser"
   },
   env: {
     es6: true,
@@ -22,6 +23,8 @@ module.exports = {
   rules: {
     'no-console': process.env.NODE_ENV !== 'production' ? 0 : 2,
     'no-useless-escape': 0,
+    'no-func-assign': 0,
+    "@typescript-eslint/no-explicit-any": "off",
     'no-empty': 0
   }
 }

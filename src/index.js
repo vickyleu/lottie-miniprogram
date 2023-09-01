@@ -1,4 +1,4 @@
-import {setup, g, restore} from './adapter'
+import {setup,onMoveDelegate, g, restore} from './adapter'
 const {window, document, navigator} = g
 
 ;'__LOTTIE_CANVAS__'
@@ -34,8 +34,77 @@ function loadAnimation(options) {
 
 const {freeze, unfreeze} = window.lottie
 
+function CanvasRenderer2(animationItem, config){
+  this.animationItem = animationItem;
+  this.renderConfig = {
+    clearCanvas: (config && config.clearCanvas !== undefined) ? config.clearCanvas : true,
+    context: (config && config.context) || null,
+    progressiveLoad: (config && config.progressiveLoad) || false,
+    preserveAspectRatio: (config && config.preserveAspectRatio) || 'xMidYMid meet',
+    imagePreserveAspectRatio: (config && config.imagePreserveAspectRatio) || 'xMidYMid slice',
+    className: (config && config.className) || '',
+    id: (config && config.id) || '',
+  };
+  this.renderConfig.dpr = (config && config.dpr) || 1;
+  if (this.animationItem.wrapper) {
+    this.renderConfig.dpr = (config && config.dpr) || window.devicePixelRatio || 1;
+  }
+  this.renderedFrame = -1;
+  this.globalData = {
+    frameNum: -1,
+    _mdf: false,
+    renderConfig: this.renderConfig,
+    currentGlobalAlpha: -1
+  };
+  this.contextData = new CVContextData();
+  this.elements = [];
+  this.pendingElements = [];
+  this.transformMat = new Matrix();
+  this.completeLayers = false;
+  this.rendererType = 'canvas';
+}
+
+function getName(value) {
+  if (typeof value === 'function') {
+    return value.name || 'Anonymous function';
+  } else if (typeof value === 'object') {
+    return value.constructor.name || 'Object';
+  }
+  return 'Not a function or object';
+}
+
+function onMove(deltaX,deltaY) {
+  // window.lottie
+
+  let animations = window.lottie.animationManager.getRegisteredAnimations()
+  let elem = animations[0];
+
+  function replacer(key, value) {
+    // 检查当前值是否是一个对象，并且已经被访问过（发生了循环引用）
+    if (key === 'renderer') {
+      console.log(`renderer==>>${typeof value}`)
+      return ''; // 或者返回其他占位值
+    }
+    if (typeof value === 'object' && value !== null && seen.indexOf(value) !== -1) {
+      return '[Circular]';
+    }
+    seen.push(value);  // 将当前值添加到已访问数组中
+    return value;
+  }
+  let seen = [];  // 用于跟踪已访问的值
+  try {
+    let canvasContext = elem.renderer.globalData.canvasContext;
+    let contextData = elem.renderer.contextData;
+    let transformMat = elem.renderer.transformMat;
+    onMoveDelegate(deltaX,deltaY,elem.renderer,canvasContext,contextData,transformMat)
+  }catch (e){
+
+  }
+}
+
 export {
   setup,
+  onMove,
   loadAnimation,
   freeze,
   unfreeze,

@@ -1,3 +1,5 @@
+/* eslint-disable no-func-assign */
+
 const _url = new WeakMap()
 const _method = new WeakMap()
 const _requestHeader = new WeakMap()
@@ -54,7 +56,6 @@ export default class XMLHttpRequest {
 
   abort() {
     const myRequestTask =  _requestTask.get(this)
-
     if (myRequestTask) {
       myRequestTask.abort()
     }

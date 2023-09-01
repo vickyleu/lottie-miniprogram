@@ -43,8 +43,10 @@ interface LoadAnimationReturnType {
 }
 
 declare module lottie {
-  var loadAnimation: (options: LoadAnimationParameter) => LoadAnimationReturnType;
-  var setup: (node: any) => void;
+  // @ts-ignore
+  let loadAnimation: (options: LoadAnimationParameter) => LoadAnimationReturnType;
+  let setup: (node: any) => void;
+  let onMove: (deltaX: number, deltaY: number) => void;
 }
 
 export default lottie;

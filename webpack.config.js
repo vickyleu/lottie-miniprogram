@@ -27,7 +27,7 @@ module.exports = {
         options: {
           multiple: [{
             search: `'__LOTTIE_CANVAS__'`,
-            replace: fs.readFileSync('./node_modules/lottie-web/build/player/lottie_canvas.js', {encoding: 'utf8'}),
+            replace: fs.readFileSync('./lottie_canvas.js', {encoding: 'utf8'}),
           }, {
             search: '__[STANDALONE]__',
             replace: '',

@@ -1,5 +1,6 @@
 import XHR from './XMLHttpRequest'
 
+
 function noop() {}
 
 function notSupport() {
@@ -61,6 +62,9 @@ function wrapMethodFatory(ctx, methodName, wrappedMethod) {
 
 const systemInfo = wx.getSystemInfoSync()
 const g = {
+  contentPosition: { x: 0, y: 0 },
+  _canvas:null,
+  _rawCanvas:null,
   requestAnimationFrame(cb) {
     setTimeout(() => {
       typeof cb === 'function' && cb(Date.now())
@@ -70,6 +74,51 @@ const g = {
 
 g.window = {
   devicePixelRatio: systemInfo.pixelRatio,
+
+  moveBy: (deltaX, deltaY,renderer,canvasContext,contextData,transformMat) => {
+    if (!g.contentPosition) {
+      g.contentPosition = { x: 0, y: 0 };
+    }
+    const context = g._canvas;
+    const rawCanvas = g._rawCanvas;
+
+
+    g.contentPosition.x += deltaX;
+    g.contentPosition.y += deltaY;
+    console.log(`moveBy context::${context}  ${rawCanvas}`)
+    if(context){
+     /*
+      // 然后移动内容到新位置
+      context.translate(g.contentPosition.x, g.contentPosition.y);
+      console.log(`moveBy context::${g.contentPosition.y}`)*/
+
+      if(contextData && renderer){
+        canvasContext.save()
+        contextData.cTr.cloneFromProps(transformMat.props);
+        // const trProps = contextData.cTr.props;
+        renderer.save(true);
+        renderer.ctxTransform(transformMat.props);
+        // renderer.ctxOpacity(this.finalTransform.mProp.o.v);
+
+        /*console.log(`onMove::this:${elem.elem} `)
+        console.log(`onMove::this:${elem.animation} `)*/
+
+        // this.globalData.renderer.save(forceRealStack);
+        // this.globalData.renderer.ctxTransform(this.finalTransform.mat.props);
+        // this.globalData.renderer.ctxOpacity(this.finalTransform.mProp.o.v);
+
+/*        console.log(`moveBy 2  trProps:${JSON.stringify(trProps)}`)
+        // 在每次绘制之前重置transform
+//         canvasContext.setTransform(1, 0, 0, 1, 0, 0);
+        //g.contentPosition.x& y 怎么对应下面的Transform
+        canvasContext.setTransform(trProps[0], trProps[1], trProps[4], trProps[5], trProps[12] + g.contentPosition.x,  // 加上水平偏移量
+            trProps[13] + g.contentPosition.y   // 加上垂直偏移量
+        );
+        canvasContext.restore()*/
+      }
+      console.log(`moveBy 2 context::${g.contentPosition.y}`)
+    }
+  }
 }
 g.document = g.window.document = {
   body: {},
@@ -81,8 +130,15 @@ g.navigator = g.window.navigator = {
 
 XMLHttpRequest = XHR
 
+export const onMoveDelegate = (deltaX, deltaY,renderer,canvasContext,contextData,transformMat) => {
+  const {window} = g
+  window.moveBy(deltaX,deltaY,renderer,canvasContext,contextData,transformMat)
+}
+
+
 export const setup = (canvas) => {
   const {window, document} = g
+
   g._requestAnimationFrame = window.requestAnimationFrame
   g._cancelAnimationFrame = window.cancelAnimationFrame
   // lottie 对象是单例，内部状态（_stopped）在多页面下会混乱，保持 rAF 持续运行可规避
@@ -107,9 +163,12 @@ export const setup = (canvas) => {
   document.createElement = createElement.bind(canvas)
 
   const ctx = canvas.getContext('2d')
+
   if (!ctx.canvas) {
     ctx.canvas = canvas
   }
+  g._canvas = ctx
+  g._rawCanvas = canvas
 
   wrapMethodFatory(ctx, 'setLineDash', wrapSetLineDash)
   wrapMethodFatory(ctx, 'fill', wrapFill)
